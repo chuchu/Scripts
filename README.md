@@ -1,4 +1,4 @@
-PowershellSamples
+Scripts
 =================
 
-Powershell sample scripts.
+Collection of scripts.
