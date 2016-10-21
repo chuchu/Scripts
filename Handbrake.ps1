@@ -25,34 +25,42 @@ function GetMatchOrEmptyStringFromFile([string]$file, [string]$regex)
     }
 }
 
-$temp_file = "$($env:temp)\$([System.Guid]::NewGuid().ToString()).txt"
-
-& $handbrakeCLI --input $sourceFolder --scan *>&1 > "$($temp_file)"
-
-$titles = GetMatchOrEmptyStringFromFile $temp_file ".*has (\d*) title.*"
-
-for( $i=1; $i -le $titles; $i++ )
+function ProcessFolder($folder)
 {
-    & $handbrakeCLI --input $sourceFolder --scan --title $i *>&1 > "$($temp_file)"    
+    $temp_file = "$($env:temp)\$([System.Guid]::NewGuid().ToString()).txt"
 
-    $german_index = GetMatchOrEmptyStringFromFile $temp_file ".*\+\s(\d*),\sDeutsch.*ch.*"
+    & $handbrakeCLI --input $folder.FullName --scan *>&1 > "$($temp_file)"
 
-    if( !$german_index )
+    $titles = GetMatchOrEmptyStringFromFile $temp_file ".*has (\d*) title.*"
+
+    for( $i=1; $i -le $titles; $i++ )
     {
-        continue;
+        & $handbrakeCLI --input $folder.FullName --scan --title $i *>&1 > "$($temp_file)"    
+
+        $german_index = GetMatchOrEmptyStringFromFile $temp_file ".*\+\s(\d*),\sDeutsch.*ch.*"
+
+        if( !$german_index )
+        {
+            continue;
+        }
+
+        $chapter_file = "$($env:temp)\$([System.Guid]::NewGuid().ToString()).csv"
+    
+        & $handbrakeCLI -i $folder.FullName -t $i --angle 1 -c 1-2 -o "$($targetFolder)\$($folder.Parant.Name)\$($i).mp4"  -f mp4  --deinterlace="slow" -w 720 --crop 0:2:0:0 --loose-anamorphic  --modulus 2 -e x264 -q 25 --vfr -a $german_index -E av_aac -6 dpl2 -R Auto -B 160 -D 0 --gain 0 --audio-fallback ac3 --markers=$chapter_file --encoder-preset=veryfast  --encoder-level="4.0"  --encoder-profile=main
+
+        If (test-path $chapter_file)
+        {
+	        remove-item $chapter_file
+        }
     }
 
-    $chapter_file = "$($env:temp)\$([System.Guid]::NewGuid().ToString()).csv"
-    
-    & $handbrakeCLI -i $sourceFolder -t $i --angle 1 -c 1-2 -o "$($targetFolder)\$($i).mp4"  -f mp4  --deinterlace="slow" -w 720 --crop 0:2:0:0 --loose-anamorphic  --modulus 2 -e x264 -q 25 --vfr -a $german_index -E av_aac -6 dpl2 -R Auto -B 160 -D 0 --gain 0 --audio-fallback ac3 --markers=$chapter_file --encoder-preset=veryfast  --encoder-level="4.0"  --encoder-profile=main
-
-    If (test-path $chapter_file)
+    If (test-path $temp_file)
     {
-	    remove-item $chapter_file
+	    remove-item $temp_file
     }
 }
 
-If (test-path $temp_file)
+foreach( $videoTSFolder in gci $sourceFolder -Recurse -Filter "VIDEO_TS")
 {
-	remove-item $temp_file
+    ProcessFolder( $videoTSFolder )
 }
