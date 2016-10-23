@@ -4,11 +4,6 @@
     [string] $handbrakeCLI = "E:\Program Files\Handbrake\HandBrakeCLI.exe"
 )
 
-if ( -Not ( Test-Path $targetFolder ) )
-{
-	md -Path $targetFolder
-}
-
 function GetMatchOrEmptyStringFromFile([string]$file, [string]$regex)
 {
     $matches = select-string -path $file -pattern $regex -AllMatches
@@ -33,17 +28,17 @@ function ProcessFolder($folder)
 	    md -Path $currentTargetFolder
     }    
     
-    $temp_file = "$($env:temp)\$([System.Guid]::NewGuid().ToString()).txt"
+    $handbrakeProcessOut = "$($env:temp)\$([System.Guid]::NewGuid().ToString()).txt"
 
-    & $handbrakeCLI --input $folder.FullName --scan *>&1 > "$($temp_file)"
+    & $handbrakeCLI --input $folder.FullName --scan *>&1 > "$($handbrakeProcessOut)"
 
-    $titles = GetMatchOrEmptyStringFromFile $temp_file ".*has (\d*) title.*"
+    $numberOfTitles = GetMatchOrEmptyStringFromFile $handbrakeProcessOut ".*has (\d*) title.*"
 
-    for( $i=1; $i -le $titles; $i++ )
+    for( $i=1; $i -le $numberOfTitles; $i++ )
     {
-        & $handbrakeCLI --input $folder.FullName --scan --title $i *>&1 > "$($temp_file)"    
+        & $handbrakeCLI --input $folder.FullName --scan --title $i *>&1 > "$($handbrakeProcessOut)"    
 
-        $german_index = GetMatchOrEmptyStringFromFile $temp_file ".*\+\s(\d*),\sDeutsch.*ch.*"        
+        $german_index = GetMatchOrEmptyStringFromFile $handbrakeProcessOut ".*\+\s(\d*),\sDeutsch.*ch.*"        
                 
         if( !$german_index )
         {
@@ -54,19 +49,17 @@ function ProcessFolder($folder)
 
         $outFile = "$($targetFolder)\$($folder.Parent.Name)\$($i).mp4"
     
-        & $handbrakeCLI -i $folder.FullName -t $i --angle 1 -c 1-2 -o "$($currentTargetFolder)\$($i).mp4" -f mp4  --deinterlace="slow" -w 720 --crop 0:2:0:0 --loose-anamorphic  --modulus 2 -e x264 -q 25 --vfr -a $german_index -E av_aac -6 dpl2 -R Auto -B 160 -D 0 --gain 0 --audio-fallback ac3 --markers=$chapter_file --encoder-preset=veryfast  --encoder-level="4.0"  --encoder-profile=main                        
+        & $handbrakeCLI -i $folder.FullName -t $i --angle 1 -c 1-2 -o "$($currentTargetFolder)\$($i).mp4" -f mp4  --deinterlace="slow" -w 720 --crop 0:2:0:0 --loose-anamorphic  --modulus 2 -e x264 -q 25 --vfr -a $german_index -E av_aac -6 dpl2 -R Auto -B 160 -D 0 --gain 0 --audio-fallback ac3 --markers=$chapter_file --encoder-preset=veryfast  --encoder-level="4.0"  --encoder-profile=main
 
         If (test-path $chapter_file)
         {
 	        remove-item $chapter_file
-        }
-
-        break;
+        }        
     }
 
-    If (test-path $temp_file)
+    If (test-path $handbrakeProcessOut)
     {
-	    remove-item $temp_file
+	    remove-item $handbrakeProcessOut
     }
 }
 
