@@ -1,7 +1,8 @@
 ﻿param(
     [string] $sourceFolder,
     [string] $targetFolder,
-    [string] $handbrakeCLI = "E:\Program Files\Handbrake\HandBrakeCLI.exe"
+    [string] $handbrakeCLI = "E:\Program Files\Handbrake\HandBrakeCLI.exe",
+    [int] $quality = 25
 )
 
 function GetMatchOrEmptyStringFromFile([string]$file, [string]$regex)
@@ -45,11 +46,9 @@ function ProcessFolder($folder)
             continue;
         }
 
-        $chapter_file = "$($env:temp)\$([System.Guid]::NewGuid().ToString()).csv"
-
-        $outFile = "$($targetFolder)\$($folder.Parent.Name)\$($i).mp4"
+        $chapter_file = "$($env:temp)\$([System.Guid]::NewGuid().ToString()).csv"        
     
-        & $handbrakeCLI -i $folder.FullName -t $i --angle 1 -c 1-2 -o "$($currentTargetFolder)\$($i).mp4" -f mp4  --deinterlace="slow" -w 720 --crop 0:2:0:0 --loose-anamorphic  --modulus 2 -e x264 -q 25 --vfr -a $german_index -E av_aac -6 dpl2 -R Auto -B 160 -D 0 --gain 0 --audio-fallback ac3 --markers=$chapter_file --encoder-preset=veryfast  --encoder-level="4.0"  --encoder-profile=main
+        & $handbrakeCLI -i $folder.FullName -t $i --angle 1 -c 1-2 -o "$($currentTargetFolder)\$($i).mp4" -f mp4  --deinterlace="slow" -w 720 --crop 0:2:0:0 --loose-anamorphic  --modulus 2 -e x264 -q $quality --vfr -a $german_index -E av_aac -6 dpl2 -R Auto -B 160 -D 0 --gain 0 --audio-fallback ac3 --markers=$chapter_file --encoder-preset=veryfast  --encoder-level="4.0"  --encoder-profile=main
 
         If (test-path $chapter_file)
         {
