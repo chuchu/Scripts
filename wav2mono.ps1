@@ -13,7 +13,7 @@ else
 
 foreach( $file in get-childitem -filter *$wavExtension )
 {	
-	Write-Hoste "Converting $file.Name"
+	Write-Host "Converting $file.Name"
 	
 	$params = @()
 	$params += $file.Name

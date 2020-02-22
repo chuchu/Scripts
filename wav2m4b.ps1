@@ -1,11 +1,9 @@
 param
 (
-	[int] $filesPerAudioBook=9999,
+	[int] $filesPerAudioBook=1,
 	[String] $name="audiobook"
 )
 
-$mp3Folder = "mp3"
-$monoWavFolder = "monoWav"
 $combinedWavFolder = "combinedWav"
 $audiobookFolder = "audiobook"
 $mp4 = "mp4"
@@ -61,7 +59,7 @@ while( $fileNameList.Count -gt 0 )
 	for( $i=0; $i -lt $filesPerAudioBook -and $fileNameList.Count -gt 0; $i++ )
 	{
 		Write-Host $fileNameList[0]
-		$params += $fileNameList[0]		
+		$params += $fileNameList[0]
 		$fileNameList.RemoveAt( 0 )
 	}
 
@@ -84,7 +82,7 @@ $fileNameList.Sort()
 
 $params = @()
 $params += "-br"
-$params += 131072 # Bit per second
+$params += 65536 # Bit per second
 $params += "-2pass"
 
 foreach( $file in $fileNameList )
@@ -124,6 +122,6 @@ $params += $audiobookFile
 mp4chaps $params
 
 Write-Host "Rename audio book file to m4b"
-$fileWithoutExtension = $audiobookFile.Substring( 0, $audiobookFile.Length - $m4b.Length )		
+$fileWithoutExtension = $audiobookFile.Substring( 0, $audiobookFile.Length - $m4b.Length )
 $newFileName = $fileWithoutExtension + $m4b
 Rename-Item $audiobookFile $newFileName
