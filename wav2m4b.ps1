@@ -1,7 +1,7 @@
 param
 (
-	[String] $inFolder,
-	[String] $outFolder
+    [String] $inFolder,
+    [String] $outFolder
 )
 
 if(-Not (Test-Path $outFolder))
