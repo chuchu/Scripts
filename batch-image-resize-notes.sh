@@ -19,7 +19,7 @@ HEIGHT=768
 #find ${FOLDER} -iname '*.png' -exec convert \{} -verbose -resize $WIDTHx$HEIGHT\> \{} \;
 
 #resize jpg only to either height or width, keeps proportions using imagemagick
-find ${FOLDER} -iname '*.jpg' -exec convert \{} -set colorspace Gray -separate -average -strip -interlace Plane -gaussian-blur 0.05 -quality 50%\> \{} \;
+find ${FOLDER} -iname '*.jpg' -exec convert \{} -set colorspace Gray -separate -average -strip -interlace Plane -gaussian-blur 0.05 -quality 50% -resize 2000x\> \{} \;
 
 # alternative
 #mogrify -path ${FOLDER} -resize ${WIDTH}x${HEIGHT}% *.png -verbose
