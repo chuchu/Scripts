@@ -1,49 +1,44 @@
-$OutFolder = "combined"
+param
+(
+    [String] $inFolder,
+    [String] $outFolder
+)
 
-if( Test-Path $OutFolder )
+if(-Not (Test-Path $outFolder))
 {
-	Write-Host "Out folder already exists."
-	return
+    New-Item -ItemType directory -Path $OutFolder
 }
-else
+
+$files = [System.Collections.Generic.List[System.IO.FileInfo]](get-childitem -filter *.wav $inFolder)
+
+$currentFileNumber = 1;
+
+while( $files.Count -gt 0 )
 {
-	New-Item -ItemType directory -Path $OutFolder
-}
+    $params = @()
+    
+    Write-Host "Adding file $($files[0].FullName)"
+    $params += $files[0].FullName
+    $currentSize = $files[0].Length
+    $files.RemoveAt(0);
 
-$Files = [System.Collections.Generic.List[System.IO.FileInfo]]( get-childitem -filter *.wav )
+    while( $files.Count -gt 0 )
+    {
+        if(($currentSize + $files[0].Length) -gt 600MB)
+        {
+            break
+        }
+        else
+        {
+            Write-Host "Adding file $($files[0].FullName)"
+            $params += $files[0].FullName
+            $currentSize += $files[0].Length
+            $files.RemoveAt(0);
+        }
+    }
 
-Write-Host "File Count" $Files.Count
-
-$CurrentFileNumber = 1;
-
-while( $Files.Count -gt 0 )
-{
-	$Params = @()
-	$Params += $Files[ 0 ]	
-	$CurrentSize = $Files[ 0 ].Length
-	#Write-Host "Adding file" $Files[ 0 ].Name	
-	#Write-Host "Current file size is" $CurrentSize
-	$Files.RemoveAt( 0 );
-		
-	while( $Files.Count -gt 0 )
-	{
-		if( ( $CurrentSize + $Files[ 0 ].Length ) -gt 600MB )
-		{
-			break
-		}
-		else
-		{
-			$Params += $Files[ 0 ]
-			$CurrentSize += $Files[ 0 ].Length
-			#Write-Host "Adding file" $Files[ 0 ].Name			
-			#Write-Host "Current file size is" $CurrentSize
-			$Files.RemoveAt( 0 );
-		}		
-	}
-	
-	$OutFileName = "Part" + "{0:D2}" -f $CurrentFileNumber + ".wav"	
-	#Write-Host "Write out file" $OutFileName
-	$Params += Join-Path -path $OutFolder -child $OutFileName
-	sox $Params
-	$CurrentFileNumber += 1
+    $outFileName = "Part" + "{0:D2}" -f $currentFileNumber + ".wav"	
+    $params += Join-Path -path $outFolder -child $outFileName
+    sox $params
+    $currentFileNumber += 1
 }

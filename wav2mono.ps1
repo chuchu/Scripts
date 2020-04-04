@@ -1,25 +1,20 @@
-$wavExtension = ".wav"
-$outFolder = "out"
+param
+(
+    [String] $inFolder = ".",
+    [String] $outFolder
+)
 
-if( Test-Path $outFolder )
+if(-Not (Test-Path $outFolder))
 {
-	Write-Host "Out folder already exists."
-	exit
-}
-else
-{
-	New-Item -ItemType directory -Path $outFolder	
+    New-Item -ItemType directory -Path $OutFolder
 }
 
-foreach( $file in get-childitem -filter *$wavExtension )
-{	
-	Write-Host "Converting $file.Name"
-	
-	$params = @()
-	$params += $file.Name
-	$params += Join-Path -path $outFolder -child $file.Name
-	$params += "remix"
-	$params += "1-2"
-			
-	sox $params	
+foreach( $file in get-childitem -filter *.wav $inFolder )
+{
+    $params = @()
+    $params += $file.FullName
+    $params += Join-Path -path $outFolder -child $file.Name
+    $params += "remix"
+    $params += "1-2"
+    sox $params
 }

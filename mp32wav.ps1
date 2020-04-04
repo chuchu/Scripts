@@ -1,30 +1,21 @@
-$Mp3Extension = ".mp3"
-$WavExtension = ".wav"
-$OutFolder = "wav"
+param
+(
+    [String] $inFolder = ".",
+    [String] $outFolder
+)
 
-if( Test-Path $OutFolder )
+if(-Not (Test-Path $outFolder))
 {
-	Write-Host "Out folder already exists."
-	return
-}
-else
-{
-	New-Item -ItemType directory -Path $OutFolder
+    New-Item -ItemType directory -Path $OutFolder
 }
 
-$Files = get-childitem -filter *.mp3
-
-for ( $i = 0; $i -lt $Files.Count; $i++ )
+foreach ($file in get-childitem -filter *.mp3 $inFolder)
 {
-	$CurrentFile = $Files[$i]
-	
-	$WavFileName = [io.path]::ChangeExtension($CurrentFile.FullName, $WavExtension)	
-		
-	$Params = @()
-	$Params += "--decode"
-	$Params += $CurrentFile.Name
-	$Params += $WavFileName	
-	lame $Params
-	
-	Move-Item $WavFileName $OutFolder
+    $wavFileName = [io.path]::ChangeExtension($file.Name, "wav")
+
+    $params = @()
+    $params += "--decode"
+    $params += $file.FullName
+    $params += Join-Path -Path $outFolder -ChildPath $wavFileName
+    lame $params
 }
